@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<!--
+U.S. Census API Call Builder
+Copyright (C) 2017  CGR's Data Science Team
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<html>
+<head>
+    <title>U.S. Census API Call Builder - Powered by CGR</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"/>
+    <meta charset="UTF-8" />
+    <meta name="author" content="Michael Silva" />
+    <meta name="description" content="The U.S. Census API Call Builder, a CGR data science team project, aids in pulling data via the Census API." />
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://datascience.cgr.org/assets/js/jquery.ui.touch-punch.min.js"></script>
+    <link rel="shortcut icon" type="image/x-icon" href="https://www.cgr.org/favicon.ico"/>
+    <style>
+    /* Global Styles */
+    * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        outline: none;
+    }
+    html, body {
+        font-family: "Open Sans", sans-serif;
+        font-size: 15px;
+        color: #808080;
+        letter-spacing: -0.01em;
+        font-weight: 400;
+        margin: 0;
+        padding:0;
+        background-color:#F5F8FA;
+    }
+    h1{
+        color: #04334d;
+        font-weight: 300;
+        margin-bottom: 10px;
+        font-size: 2.4rem;
+    }
+    .no_copy{
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    .left {float: left;}
+    .right {float: right;}
+    .clear {clear: both;}
+
+    .hidden {
+        display: none;
+    }
+    .red_button, .back_or_next{
+        background-color: #B20838;
+        color: white;
+    }
+    .smaller{
+        text-size:smaller;
+    }
+    .gray_button{
+        color: #999;
+        background-color: #E1E3E5;
+    }
+    .gray_button:hover{
+        cursor: default;
+    }
+    .button {
+        height: 45px;
+        line-height: 45px;
+        text-align: center;
+        padding-left: 30px;
+        padding-right: 30px;
+        border-radius: 45px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: none;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-block;
+        margin-top: 20px;
+    }
+    #dataset_info{
+        background-color: #008FCC;
+        color: white;
+        margin-top: 0;
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+    input[type="text"] {
+        border: none;
+        border-bottom: 2px solid #CCC;
+        background: transparent;
+        padding-bottom: 10px;
+        padding-top: 10px;
+        font-size: 1.1rem;
+        letter-spacing: -0.02rem;
+        outline: none;
+        color: #04334D;
+        display: block;
+        width: 100%;
+        transition: all 0.2s;
+        border-radius: 0;
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+        -ms-appearance: none;
+        -o-appearance: none;
+        appearance: none;
+    }
+    input[type="text"]:focus {
+        border-bottom: 2px solid #04334D;
+    }
+    #dataset_dropdown{
+        width: calc(100% - 65px);
+    }
+    select {
+        display: block;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        -ms-appearance: none;
+        -o-appearance: none;
+        appearance: none;
+        border-radius: 4px;
+        background-color: white;
+        box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        height: 45px;
+        line-height: 45px;
+        background-image: url('https://www.cgr.org/cgr-assets/icons/arrow-menu-down-gray.svg');
+        background-size: 15px;
+        background-position: calc(100% - 20px) 50%;
+        background-repeat: no-repeat;
+        border: none;
+        outline: none;
+        padding-left: 15px;
+        color: #808080;
+        padding-right: 12px;
+        font-size: 0.9rem;
+        width: 100%;
+        margin-top: 20px;
+    }
+    /* Header */
+    .github-link {
+        width: 60px;
+        height: 60px;
+        position: absolute;
+        display: block;
+        top: 0;
+        right: 0;
+        z-index: 1000;
+    }
+    .github-link .bg {
+        fill: white;
+        fill-opacity: 0.2;
+    }
+    .github-link:hover .bg {
+        fill-opacity: 0.3;
+    }
+    .github-link .icon {
+        fill: white;
+        fill-opacity: 0.6;
+    }
+    .github-link:hover .icon {
+        fill-opacity: 0.7;
+    }
+    header {
+        background-color: #04334D;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        position: relative;
+        min-height: 60px;
+        z-index: 4;
+    }
+    .cgr_brand {
+        display: block;
+        background-image: url('https://www.cgr.org/cgr-assets/cgr-datascience-branding.png');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 75px;
+        height: 60px;
+        width: calc(100% - 40px);
+        margin: 0 auto;
+        opacity: 0.7;
+        transition: 0.2s;
+    }
+    .cgr_brand:hover {
+        opacity: 1;
+    }
+    /* Navigation */
+    #results_tabs, nav {
+        background: white;
+        z-index: 3;
+        top: 0;
+        width: 100%;
+        height: 70px;
+        display: flex;
+        display: -webkit-flex;
+        align-items: center;
+    }
+    nav {
+        box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.15);
+        position:relative;
+        z-index:3;
+    }
+    .tab,
+    .menu_item {
+        width: 20%;
+        z-index: 2;
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #999;
+        font-size: 0.9rem;
+        border-right: 1px solid #CCC;
+        height: 100%;
+        position: relative;
+        transition: color 0.3s;
+        cursor: pointer;
+        display: flex;
+        display: -webkit-flex;
+        align-items: center;
+        -webkit-align-items: center;
+        justify-content: center;
+        -webkit-justify-content: center;
+    }
+    .menu_item .current_indicator {
+        width: 0%;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        height: 3px;
+        background: #999;
+        opacity: 1;
+        transition: all 0.4s cubic-bezier(0.86, 0, 0.07, 1);
+    }
+    .menu_item.current, .menu_item:hover {
+        color: #04334D;
+    }
+    .menu_item:not(.current):hover .current_indicator {
+        background: #04334D;
+        opacity: 1;
+        width: 100%;
+        left: 0;
+    }
+    .menu_item.current .current_indicator {
+        opacity: 1;
+        width: 100%;
+        left: 0;
+        background: #B20838;
+    }
+    /* Main Content */
+    main{
+        width: 100%;
+        position: fixed;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        z-index: 1;
+        height: calc(100% - 130px);
+    }
+    main.api_key section#welcome_wrapper,
+    main.variables section#welcome_wrapper,
+    main.geography section#welcome_wrapper,
+    main.results section#welcome_wrapper,
+
+    main.welcome section#variables_wrapper,
+    main.api_key section#variables_wrapper,
+    main.geography section#variables_wrapper,
+    main.results section#variables_wrapper,
+
+    main.welcome section#api_key_wrapper,
+    main.variables section#api_key_wrapper,
+    main.geography section#api_key_wrapper,
+    main.results section#api_key_wrapper,
+
+    main.welcome section#geography_wrapper,
+    main.variables section#geography_wrapper,
+    main.api_key section#geography_wrapper,
+    main.results section#geography_wrapper,
+
+    main.welcome section#results_wrapper,
+    main.variables section#results_wrapper,
+    main.api_key section#results_wrapper,
+    main.geography section#results_wrapper {
+        display: none;
+    }
+    section{
+        padding: 5%;
+        padding-top: 20px;
+    }
+    /* Variables */
+    #variables_gui {
+        border-radius: 5px;
+        background-color: white;
+        box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .column {
+        display: block;
+        margin: 0;
+        margin-left: 2%;
+        width: 49%;
+        border-radius: 5px;
+        min-height: 40px;
+        background-color: #f3f3f3;
+        box-shadow: inset 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+    }
+    .first {margin-left: 0;}
+    /* Sortable items */
+    .sortable_list {
+        list-style: none;
+        padding: 10px;
+        padding-top: 0;
+    }
+    .sortable_item {
+        overflow: hidden;
+        background-color: #008FCC;
+        text-align: center;
+        padding-left: 30px;
+        padding-right: 30px;
+        border-radius: 5px;
+        color: white;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: none;
+        transition: all 0.2s;
+        cursor: move;
+        display: block;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 10px;
+        line-height: 20px;
+    }
+    li.sortable_item:hover {
+        background-color: #006f9e;
+    }
+    .sortable_item span {
+        display:block;
+        font-weight: normal;
+    }
+    .placeholder {
+        border: 3px dashed #ccc;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        height: 40px;
+        margin-top: 10px;
+    }
+    /* Geography */
+    #for_wrapper{
+        margin-top:20px;
+    }
+    /* Results table */
+    #results_block{
+        border-radius: 5px;
+        background-color: white;
+        box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+        width:100%;
+    }
+    .html_tab #python_content,
+    .html_tab #r_content,
+    .python_tab #html_content,
+    .python_tab #r_content,
+    .r_tab #html_content,
+    .r_tab #python_content {
+        display: none;
+    }
+    #results_block.html_tab #html_tab,
+    #results_block.python_tab #python_tab,
+    #results_block.r_tab #r_tab{
+        border-bottom: 1px solid white;
+        background-color: white;
+        color:#04334D;
+    }
+    #results_tabs .tab{
+        color: #999;
+        background-color: #f5f5f5;
+        display: inline-block;
+        width: calc(100% / 3);
+        border-bottom: 1px solid #D9D9D9;
+        border-right: 1px solid #D9D9D9;
+        line-height: 70px;
+    }
+    #results_tabs .tab:last-child{
+        border-right: 0;
+    }
+    #results_tabs .tab:hover{
+        cursor: pointer;
+        color2: white;
+        background-color2: #006f9e;
+    }
+    .results_content{
+        padding:20px;
+    }
+    table {
+        border-collapse: collapse;
+        margin-top: 20px;
+        border-radius: 5px;
+        background-color: white;
+        box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        font-size: 0.9rem;
+    }
+    tr {
+        /*display: flex;
+        display: -webkit-flex;*/
+        align-items: center;
+        -webkit-align-items: center;
+        background-color: #FBFBFB;
+        border-bottom: 1px solid #E0E0E0;
+        border-left: 1px solid #E0E0E0;
+        border-right: 1px solid #E0E0E0;
+    }
+    tr:first-child {
+        background: #04334d;
+        border-radius: 5px 5px 0 0;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    tr:last-child {
+        border-radius: 0 0 5px 5px;
+    }
+    tr:nth-child(even) {
+        background-color: white;
+    }
+    td{
+        padding: 15px 20px;
+    }
+    pre {
+        overflow-x: scroll;
+        border: 1px solid #E0E0E0;
+        box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        border-radius: 5px;
+    }
+    #error_message{
+        border-radius: 5px;
+        background-color: #B20838;
+        color: white;
+        box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        width:100%;
+        display: none;
+        margin-bottom: 20px;
+    }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="no_copy">
+        <!-- CGR branding -->
+        <a class="cgr_brand" href="https://www.cgr.org" target="_blank"></a>
+        <!-- GitHub link -->
+        <a class="github-link" href="https://github.com/cgr-promising-solutions/us-census-api-call-builder" title="Source on GitHub" target="_blank">
+            <svg xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" viewBox="0 0 60.5 60.5" width="60" height="60">
+                <polygon class="bg" points="60.5,60.5 0,0 60.5,0"/>
+                <path class="icon" d="M43.1,5.8c-6.6,0-12,5.4-12,12c0,5.3,3.4,9.8,8.2,11.4c0.6,0.1,0.8-0.3,0.8-0.6c0-0.3,0-1,0-2c-3.3,0.7-4-1.6-4-1.6c-0.5-1.4-1.3-1.8-1.3-1.8c-1.1-0.7,0.1-0.7,0.1-0.7c1.2,0.1,1.8,1.2,1.8,1.2c1.1,1.8,2.8,1.3,3.5,1c0.1-0.8,0.4-1.3,0.8-1.6c-2.7-0.3-5.5-1.3-5.5-5.9c0-1.3,0.5-2.4,1.2-3.2c-0.1-0.3-0.5-1.5,0.1-3.2c0,0,1-0.3,3.3,1.2c1-0.3,2-0.4,3-0.4c1,0,2,0.1,3,0.4c2.3-1.6,3.3-1.2,3.3-1.2c0.7,1.7,0.2,2.9,0.1,3.2c0.8,0.8,1.2,1.9,1.2,3.2c0,4.6-2.8,5.6-5.5,5.9c0.4,0.4,0.8,1.1,0.8,2.2c0,1.6,0,2.9,0,3.3c0,0.3,0.2,0.7,0.8,0.6c4.8-1.6,8.2-6.1,8.2-11.4C55.1,11.2,49.7,5.8,43.1,5.8z"/>
+            </svg>
+        </a>
+    </header>
+    <!-- Nav -->
+    <nav class="no_copy">
+        <a data-section-id="welcome" class="menu_item current">Welcome<span class="current_indicator"></span></a>
+        <a data-section-id="api_key" class="menu_item">API Key<span class="current_indicator"></span></a>
+        <a data-section-id="variables" class="menu_item">Variables<span class="current_indicator"></span></a>
+        <a data-section-id="geography" class="menu_item">Geography<span class="current_indicator"></span></a>
+        <a data-section-id="results" class="menu_item">Results<span class="current_indicator"></span></a>
+    </nav>
+    <main class="welcome">
+        <form action="." method="GET" id="form" autocomplete="off">
+
+            <!-- Welcome Note -->
+            <section id="welcome_wrapper" class="no_copy">
+                <h1>Welcome</h1>
+                <p>The U.S. Census API Call Builder is an open source project of <a href="https://www.cgr.org/datascience/" target="_blank">CGR's Data Science team</a>.  It makes pulling data from the <a href="https://www.census.gov/developers/" target="_blank">U.S. Census Bureau's API</a> easy!  For more information about this project please visit us on GitHub or email us at <a href="mailto:datascience@cgr.org">datascience@cgr.org</a>.</p>
+                <p><a class="gray_button button">Back</a> <a data-menu-item-name="api_key" class="back_or_next button">Next</a></p>
+            </section>
+
+            <!-- API Key -->
+            <section id="api_key_wrapper" class="no_copy">
+                <h1>Step 1: Entery Your API Key</h1>
+                <p>In order to use the Census API you need to have an API key.  Please enter it below.</p>
+                <p><input id="census_api_key" type="text" placeholder="Please type your Census API key here" /><br/>Don't have an API Key? <a href="https://api.census.gov/data/key_signup.html" target="_blank">Get one here</a>!</p>
+                <p><a data-menu-item-name="welcome" class="back_or_next button">Back</a> <a data-menu-item-name="variables" class="back_or_next button">Next</a></p>
+
+            </section>
+
+            <!-- Dataset -->
+            <section id="variables_wrapper" class="no_copy">
+                <h1>Step 2: Select your Dataset &amp; Variables</h1>
+                <p class="instructions">Select a dataset from the dropdown menu.  If you need more information about it click on the blue information button.  Drag the variables you want to pull from the gray space on the left to that on the right.  You may also double click the variables to move them from one list to another.</p>
+                <p>
+                    <a id="dataset_info" class="button right">i</a>
+                    <select id="dataset_dropdown" disabled="disabled">
+                        <option value="-1">Please select a data set</option>
+                    </select>
+                </p>
+                <p id="dataset_description" style="display:none; margin-top:20px;"></p>
+                <div id="variables_gui">
+                    <ul id="dataset_variables" class="sortable_list column left first"><li></li></ul>
+                    <ul id="selected_variables" class="sortable_list column left"><li></li></ul>
+                    <div class="clear"></div>
+                </div>
+                <p><a data-menu-item-name="api_key" class="back_or_next button">Back</a> <a data-menu-item-name="geography" class="back_or_next button">Next</a></p>
+            </section>
+
+            <!-- Geography -->
+            <section id="geography_wrapper" class="no_copy">
+                <h1>Step 3: Filter the Geography</h1>
+                <p class="instructions">The following dropdown lists the levels of geography that is available for the dataset.  The Census geography level is inside the parentheses.  Select a level and we will guide you to what information is required.  For guidance on the geographies available through the Census API, please visit <a href="https://www.census.gov/data/developers/geography.html" target="_blank">https://www.census.gov/data/developers/geography.html</a></p>
+                <p>
+                    <select id="geography_dropdown" disabled="disabled">
+                        <option value="-1">Please select a data set</option>
+                    </select>
+                </p>
+                <p id="for_wrapper"></p>
+                <p><a data-menu-item-name="variables" class="back_or_next button">Back</a> <a data-menu-item-name="results" class="back_or_next button">Next</a></p>
+            </section>
+
+            <!-- Results -->
+            <section id="results_wrapper">
+                <h1 class="no_copy">Step 4: View the Results</h1>
+                <div id="error_message"></div>
+                <p><a id="final_api_url" class="final_api_url" target="_blank"></a></p>
+                <div id="results_block" class="html_tab">
+                    <div id="results_tabs">
+                        <a id="html_tab" class="tab no_copy">HTML</a>
+                        <a id="python_tab" class="tab no_copy">Python</a>
+                        <a id="r_tab" class="tab no_copy">R</a>
+                    </div>
+                    <!-- HTML table -->
+                    <div id="html_content" class="results_content">
+                        <p><a id="get_data_button" class="button red_button no_copy">Get Data</a></p>
+                        <div id="results_table_wrapper" class="hidden"></div>
+                    </div>
+                    <!-- Python Code -->
+                    <div id="python_content" class="results_content">
+                        <pre id="python_source_code" class="hidden code_example"># Code built using CGR's U.S. Census API Call Builder
+# https://github.com/cgr-promising-solutions/us-census-api-call-builder
+
+import requests
+import pandas as pd
+
+# Get the data
+api_url = '<span class="final_api_url"></span>'
+response = requests.get(api_url)
+
+# Parse the response
+data = response.json()
+
+# Load the data into a data frame
+df = pd.DataFrame(data, columns = data.pop(0))
+
+# Convert the requested data to numeric
+temp = api_url.split('?get=')
+temp = temp[1].split('&amp;')
+get_string = temp[0];
+variable_list = get_string.split(',')
+df[variable_list] = df[variable_list].apply(pd.to_numeric, errors='ignore')
+
+# Save it as an Excel file
+writer = pd.ExcelWriter('census.xlsx', engine='xlsxwriter')
+df.to_excel(writer, index=False)
+writer.save()</pre>
+                        </div>
+                        <!-- R code -->
+                        <div id="r_content" class="results_content">
+                            <pre id="r_source_code" class="hidden code_example"># Code built using CGR's U.S. Census API Call Builder
+# https://github.com/cgr-promising-solutions/us-census-api-call-builder
+
+library(httr)
+library(jsonlite)
+library(xlsx)
+
+# Get the data
+api_url &lt;- '<span class="final_api_url"></span>'
+
+# Request the data
+response &lt;- GET(api_url)
+
+# Parse the response
+data &lt;- fromJSON(content(response, type='text', encoding='UTF-8'))
+
+# The first row is the data's headers
+headers &lt;- data[1,]
+
+# Load the data into a data frame
+df &lt;- data.frame(data[2:nrow(data),], stringsAsFactors = FALSE)
+names(df) &lt;- headers
+
+# Convert the requested data to numeric
+temp &lt;- strsplit(api_url, '?get=')[[1]]
+get_string &lt;- strsplit(temp[2], '&amp;')[[1]][1]
+variable_list &lt;- strsplit(get_string, ',')[[1]]
+temp &lt;- data.frame(sapply(df,  as.numeric))[,variable_list]
+temp &lt;- temp[,!sapply(temp, function(x)all(is.na(x)))]
+for(n in names(temp)){
+	df[n] &lt;- temp[n]
+}
+
+# Save it as an Excel file
+write.xlsx(df, file='census.xlsx', row.names=FALSE)</pre>
+                            </div>
+                        </div>
+                        <p class="no_copy"><a data-menu-item-name="geography" class="back_or_next button">Back</a> <a class="gray_button button">Next</a></p>
+                    </section>
+
+                </form>
+            </main>
+            <script>
+            var api_base_url = null;
+            var api_variables = null;
+            var api_url = '';
+            var data = '';
+            var dataset_id = -1;
+            var dataset_vars = '';
+            var for_string = '';
+            var geography_vars = null;
+
+            // Substitutes all the occurances of a search term with a replacement
+            String.prototype.replaceAll = function(search, replacement) {
+                var target = this;
+                return target.replace(new RegExp(search, 'g'), replacement);
+            };
+
+            // Turns a JSON object into a HTML table
+            function build_table(table_data) {
+                var table = $('<table></table>');
+                $(table_data).each(function (i, row_data) {
+                    var row = $('<tr></tr>');
+                    $(row_data).each(function (j, cell_data) {
+                        row.append($('<td>'+cell_data+'</td>'));
+                    });
+                    table.append(row);
+                });
+                return table;
+            }
+
+            // Cleans the text of Census Bureau's variable descriptions
+            function clean_text(str){
+                str = str.replaceAll("// ", "<br/>");
+                str = str.replaceAll("!!", ": ");
+                str = str.replaceAll("::", ":");
+                return str;
+            }
+
+            // Builds the geography form
+            function init_geography_data(){
+                $('#for_wrapper').empty();
+                $.getJSON(data['dataset'][dataset_id]['c_geographyLink'], function(response) {
+                    $('#geography_dropdown').html('').prop('disabled', false).append($('<option>', {value:-1, text:'Please select the level of geography', selected:true}));
+                    geography_vars = response;
+                    $.each(response['fips'], function(key, val) {
+                        $('#geography_dropdown').append($('<option>', {value:key, text:val['name']+' ('+val['geoLevelId']+')'}));
+                    });
+                });
+                set_api_url();
+            }
+
+            // Builds the API url and updates the interface
+            function set_api_url(){
+                set_for_string();
+                api_variables = $('#selected_variables').sortable('toArray');
+                api_url = api_base_url+'?get=*';
+                $.each(api_variables, function(index, value) {
+                    api_url = api_url+','+ value;
+                });
+                api_url = api_url.replace('*,','') + for_string + '&key=' + $('#census_api_key').val();
+                $('.final_api_url').html(api_url);
+                $('#final_api_url').attr('href', api_url);
+                $('.code_example').removeClass('hidden');
+                $('.copy_code_button').removeClass('hidden');
+            }
+
+            // Builds the geography string
+            function set_for_string(){
+                for_string = '';
+                var in_string = '';
+                if($('input.geography_input').length){
+                    $('input.geography_input').each(function(){
+                        val = $(this).val();
+                        if(val.length < 1){val='*';}
+                        name = $(this).attr('name').trim().replace(' ','+');
+                        part_of_in_string = $(this).attr('data-in');
+                        if(part_of_in_string == 1){
+                            in_string = in_string + '&in='+name+':'+val;
+                        } else {
+                            for_string = '&for='+name+':'+val;
+                        }
+                        for_string = for_string + in_string;
+                        for_string.replace(' ','');
+                    });
+                }
+            }
+
+            // Changes the text and color of the button
+            function toggle_get_data_button(){
+                if($('#get_data_button').hasClass('red_button')){
+                    $('#get_data_button').html('Please Wait...').addClass('gray_button').removeClass('red_button');
+                } else {
+                    $('#get_data_button').html('Get Data').addClass('red_button').removeClass('gray_button');
+                }
+            }
+
+            // Update the api url based on changes to the geography variables
+            $(document).on('keyup','input.geography_input', set_api_url);
+
+            // Adds the ability to double click variables to change their location
+            $(document).on('dblclick','#dataset_variables li.sortable_item', function(){
+                $(this).appendTo('#selected_variables');
+                set_api_url();
+            });
+            /*$(document).on('touch','#dataset_variables li.sortable_item', function(){
+                $(this).appendTo('#selected_variables');
+                set_api_url();
+            });*/
+            $(document).on('dblclick','#selected_variables li.sortable_item', function(){
+                $(this).appendTo('#dataset_variables');
+                set_api_url();
+            });
+            /*$(document).on('touch','#selected_variables li.sortable_item', function(){
+                $(this).appendTo('#dataset_variables');
+                set_api_url();
+            });*/
+
+            $(document).ready(function() {
+                // Prevent form submission
+                $("#form").submit(function(event){
+                    event.preventDefault();
+                });
+
+                // Builds geography form
+                $('#geography_dropdown').change(function(){
+                    var key = $(this).val();
+                    var g = geography_vars['fips'][key];
+                    $('#for_wrapper').empty();
+                    if('requires' in g){
+                        $.each(g['requires'], function(key, val) {
+                            var input = $('<input/>', {name:val, id:val, type:'text', placeholder:val+' (required)', class:'geography_input'}).attr('data-in', 1);
+                            $('#for_wrapper').append(input);
+                        });
+                    }
+                    var location = $('#geography_dropdown option:selected').text().split('(');
+                    var input = $('<input/>', {name:location[0], id:location[0], type:'text', placeholder:location[0], class:'geography_input'}).attr('data-in', 0);
+                    $('#for_wrapper').append(input);
+                    set_api_url();
+                });
+
+                // Navigation menu click event handling
+                $('.menu_item').click(function(){
+                    var wrapper_name = $(this).attr('data-section-id');
+                    $('main').attr('class','').addClass(wrapper_name);
+                    $('.menu_item').removeClass('current');
+                    $(this).addClass('current');
+                });
+
+                // Resuslts tab click event handling
+                $('#results_tabs .tab').click(function(){
+                    var wrapper_name = $(this).attr('id');
+                    $('#results_block').attr('class','').addClass(wrapper_name);
+                });
+
+                // Button at the bottom of page click event handling
+                $('.back_or_next').click(function(){
+                    var name = $(this).attr('data-menu-item-name');
+                    $('a[data-section-id='+name+']').click();
+                });
+
+                // Requests data from the Census API and builds a table
+                $('#get_data_button').click(function(){
+                    $('#results_table_wrapper').empty();
+                    toggle_get_data_button();
+                    $.ajax({
+                        type: 'get',
+                        url: api_url,
+                        dataType: 'json',
+                        crossDomain : true,
+                        success: function (response) {
+                            toggle_get_data_button();
+                            $('#results_table_wrapper').html(build_table(response)).removeClass('hidden');
+                        },
+                        error: function(http) {
+                            toggle_get_data_button();
+                            $('#error_message').html('Something Bad Happened!  Click the link below to see the error message.').fadeIn();
+                        }
+                    });
+                });
+
+                // Initialize the GUI
+                $.getJSON("https://api.census.gov/data.json", function(response) {
+                    data = response;
+                    // Alphabetize the results
+                    options = [];
+                    sort_me = [];
+                    $.each(data['dataset'], function(key, val) {
+                        sort_me.push(val['title']);
+                        options[val['title']] = key;
+                    });
+                    sort_me.sort();
+                    // Add options to select field
+                    for (var key in sort_me) {
+                        $('#dataset_dropdown').append($('<option>', {value:options[sort_me[key]], text:sort_me[key]})).prop("disabled", false);
+                    }
+
+                });
+
+                // Dataset help
+                $('#dataset_info').click(function(){
+                    $('#dataset_description').removeClass('hidden').slideToggle();
+                });
+
+                // Change dataset
+                $('#dataset_dropdown').change(function(){
+                    $('#for_wrapper').empty();
+                    $('#geography_dropdown').empty().append($('<option>', {value:'-1', text:'No geography for this dataset'})).prop('disabled', true);
+                    dataset_id = $(this).val();
+                    $('#dataset_description').html('');
+                    $('#dataset_variables').html('');
+                    $('#selected_variables').html('');
+                    if(dataset_id -1){
+                        // Changed data set
+                        $('#dataset_description').html(clean_text(data['dataset'][dataset_id]['description']));
+                        // Set API base url
+                        api_base_url = data['dataset'][dataset_id]['c_variablesLink'].replace('/variables.json','');
+
+                        $.getJSON(data['dataset'][dataset_id]['c_variablesLink'], function(response) {
+                            dataset_vars = response['variables'];
+                            // Alphabetize the results
+                            options = [];
+                            sort_me = [];
+                            get_geography_data = false;
+                            $.each(dataset_vars, function(key, val) {
+                                label = clean_text(val['label']);
+                                if(key == 'for' || key == 'in'){
+                                    get_geography_data = true;
+                                } else {
+                                    sort_me.push(key);
+                                    options[key] = label;
+                                }
+                            });
+                            sort_me.sort();
+                            // Add options to select field
+                            for (var key in sort_me) {
+                                $('#dataset_variables').append('<li class="sortable_item" id="'+sort_me[key]+'"><a class="dataset_variable" name="'+sort_me[key]+'">'+sort_me[key]+'</a><span class="smaller">'+options[sort_me[key]]+'</span></li>');
+                            }
+
+                            // Update geography
+                            if(get_geography_data){
+                                init_geography_data();
+                            }
+                        });
+                    }
+                });
+
+                // Dataset sortable items
+                $('#variables_wrapper .sortable_list').sortable({
+                    connectWith: '#variables_wrapper .sortable_list',
+                    placeholder: 'placeholder',
+                });
+                // What to do when a user moves an item from one side to the other
+                $('.sortable_list').on('sortreceive', function(event, ui) {
+                    set_api_url();
+                });
+            });
+            </script>
+        </body>
+        </html>
